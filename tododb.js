@@ -10,6 +10,15 @@ router.get('/', (req, res) => {
     });
 });
 
+// Endpoint untuk mendapatkan tugas berdasarkan ID
+router.get('/:id', (req, res) => {
+    db.query('SELECT * FROM todos WHERE id = ?', [req.params.id], (err, results) => {
+        if (err) return res.status(500).send('Internal Server Error');
+        if (results.length === 0) return res.status(404).send('Tugas tidak ditemukan');
+        res.json(results[0]);
+    });
+});
+
 // Endpoint untuk menambahkan tugas baru
 router.post('/', (req, res) => {
     const { task } = req.body;
@@ -21,6 +30,26 @@ router.post('/', (req, res) => {
         if (err) return res.status(500).send('Internal Server Error');
         const newTodo = { id: results.insertId, task: task.trim(), completed: false };
         res.status(201).json(newTodo);
+    });
+});
+
+// Endpoint untuk memperbarui tugas
+router.put('/:id', (req, res) => {
+    const { task, completed } = req.body;
+
+    db.query('UPDATE todos SET task = ?, completed = ? WHERE id = ?', [task, completed, req.params.id], (err, results) => {
+        if (err) return res.status(500).send('Internal Server Error');
+        if (results.affectedRows === 0) return res.status(404).send('Tugas tidak ditemukan');
+        res.json({ id: req.params.id, task, completed });
+    });
+});
+
+// Endpoint untuk menghapus tugas
+router.delete('/:id', (req, res) => {
+    db.query('DELETE FROM todos WHERE id = ?', [req.params.id], (err, results) => {
+        if (err) return res.status(500).send('Internal Server Error');
+        if (results.affectedRows === 0) return res.status(404).send('Tugas tidak ditemukan');
+        res.status(204).send();
     });
 });
 
